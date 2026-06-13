@@ -30,6 +30,14 @@ const SOUND_ICONS = {
     ocean: `<svg viewBox="0 0 24 24"><path d="M2 8c2-1.5 4-1.5 6 0s4 1.5 6 0 4-1.5 6 0"/><path d="M2 12c2-1.5 4-1.5 6 0s4 1.5 6 0 4-1.5 6 0"/><path d="M2 16c2-1.5 4-1.5 6 0s4 1.5 6 0 4-1.5 6 0"/></svg>`,
 };
 
+const PROMO_APPS = [
+    { app_name: 'fractions', label: 'Тренажёр дробей', badge: 'Скоро' },
+    { app_name: 'quizzes',  label: 'Квизы',           badge: 'Скоро' },
+    { app_name: 'soon',     label: 'Скоро...',        badge: 'Скоро' },
+];
+
+const PROMO_MOBILE_BREAKPOINT = 1024;
+
 const COLOR_WORK = 'var(--brand-teal)';
 const COLOR_REST = 'var(--color-rest)';
 const FADE_MS = 400;
@@ -95,6 +103,8 @@ class PomodoroApp {
     #ambientPreFinishVolume = 0.35;
 
     #isZenMode = false;
+    #promoSheetOpen = false;
+    #promoSwipeStartY = null;
 
     #state = {
         currentMode: 'work',
@@ -168,9 +178,11 @@ class PomodoroApp {
     constructor() {
         this.#bindElements();
         this.#buildAtmosphereGrid();
+        this.#buildPromoLists();
         this.#initWorker();
         this.#bindEvents();
         this.#bindExtrasEvents();
+        this.#bindPromoEvents();
         this.#renderSubmenu();
         this.#updateRestModeClass();
         this.#resetTimer();
@@ -191,14 +203,99 @@ class PomodoroApp {
             atmosphereToggle: $('atmosphereToggle'),
             atmospherePanel:  $('atmospherePanel'),
             atmosphereGrid:   $('atmosphereGrid'),
-            hoverBar:         $('hoverBar'),
-            hoverBarPanel:    $('hoverBarPanel'),
+            promoWrap:        $('promoWrap'),
+            promoDrawerPen:   $('promoDrawerPen'),
+            promoDrawerTab:   $('promoDrawerTab'),
+            promoDrawerList:  $('promoDrawerList'),
+            promoSheet:       $('promoSheet'),
+            promoSheetPanel:  $('promoSheetPanel'),
+            promoSheetList:   $('promoSheetList'),
+            promoSheetBackdrop: $('promoSheetBackdrop'),
+            promoSheetClose:  $('promoSheetClose'),
         };
 
         const r = this.#els.progressCircle.r.baseVal.value;
         this.#circumference = r * 2 * Math.PI;
         this.#els.progressCircle.style.strokeDasharray = `${this.#circumference} ${this.#circumference}`;
         this.#els.progressCircle.style.strokeDashoffset = '0';
+    }
+
+    #buildPromoLists() {
+        const itemHtml = PROMO_APPS.map(({ app_name, label, badge }) =>
+            `<button class="promo-drawer__item" type="button" data-app-name="${app_name}" role="listitem">
+                <span class="promo-drawer__item-name">${label}</span>
+                <span class="promo-drawer__badge">${badge}</span>
+            </button>`
+        ).join('');
+
+        this.#els.promoDrawerList.innerHTML = itemHtml;
+        this.#els.promoSheetList.innerHTML = itemHtml;
+    }
+
+    #bindPromoEvents() {
+        const { promoWrap, promoDrawerTab, promoSheet, promoSheetBackdrop, promoSheetClose, promoSheetPanel } = this.#els;
+
+        const onPromoClick = (e) => {
+            const card = e.target.closest('[data-app-name]');
+            if (!card || this.#state.isRunning) return;
+            this.#handlePromoClick(card.dataset.appName);
+        };
+
+        promoWrap.addEventListener('click', onPromoClick);
+        promoSheet.addEventListener('click', onPromoClick);
+
+        promoDrawerTab.addEventListener('click', () => {
+            if (this.#state.isRunning || window.innerWidth >= PROMO_MOBILE_BREAKPOINT) return;
+            this.#openPromoSheet();
+        });
+
+        promoSheetBackdrop.addEventListener('click', () => this.#closePromoSheet());
+        promoSheetClose.addEventListener('click', () => this.#closePromoSheet());
+
+        promoSheetPanel.addEventListener('touchstart', (e) => {
+            this.#promoSwipeStartY = e.touches[0].clientY;
+        }, { passive: true });
+
+        promoSheetPanel.addEventListener('touchmove', (e) => {
+            if (this.#promoSwipeStartY === null) return;
+            const deltaY = e.touches[0].clientY - this.#promoSwipeStartY;
+            if (deltaY > 60) {
+                this.#promoSwipeStartY = null;
+                this.#closePromoSheet();
+            }
+        }, { passive: true });
+
+        promoSheetPanel.addEventListener('touchend', () => {
+            this.#promoSwipeStartY = null;
+        }, { passive: true });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.#promoSheetOpen) {
+                this.#closePromoSheet();
+            }
+        });
+    }
+
+    #handlePromoClick(appName) {
+        reachGoal('promo_click', { app_name: appName });
+    }
+
+    #openPromoSheet() {
+        if (this.#state.isRunning) return;
+        const { promoSheet, promoDrawerTab } = this.#els;
+        this.#promoSheetOpen = true;
+        promoSheet.classList.add('is-open');
+        promoSheet.setAttribute('aria-hidden', 'false');
+        promoDrawerTab.setAttribute('aria-expanded', 'true');
+    }
+
+    #closePromoSheet() {
+        if (!this.#promoSheetOpen) return;
+        const { promoSheet, promoDrawerTab } = this.#els;
+        this.#promoSheetOpen = false;
+        promoSheet.classList.remove('is-open');
+        promoSheet.setAttribute('aria-hidden', 'true');
+        promoDrawerTab.setAttribute('aria-expanded', 'false');
     }
 
     #buildAtmosphereGrid() {
@@ -664,24 +761,35 @@ class PomodoroApp {
             brandLogo.classList.remove('running');
         }
 
-        this.#syncHoverBar();
+        this.#syncPromoDrawer();
     }
 
-    #syncHoverBar() {
-        const { hoverBar, hoverBarPanel } = this.#els;
-        if (!hoverBar) return;
+    #syncPromoDrawer() {
+        const { promoWrap, promoDrawerPen, promoDrawerTab } = this.#els;
+        if (!promoWrap) return;
 
         const blocked = this.#state.isRunning;
-        hoverBar.classList.toggle('is-blocked', blocked);
-        hoverBar.setAttribute('aria-hidden', blocked ? 'true' : 'false');
+        promoWrap.classList.toggle('is-blocked', blocked);
+        promoWrap.setAttribute('aria-hidden', blocked ? 'true' : 'false');
 
-        if (hoverBarPanel) {
-            hoverBarPanel.setAttribute('aria-hidden', blocked ? 'true' : 'false');
+        if (promoDrawerPen) {
+            promoDrawerPen.setAttribute('aria-hidden', blocked ? 'true' : 'false');
         }
 
-        hoverBar.querySelectorAll('.hover-bar__card[tabindex]').forEach((card) => {
-            card.setAttribute('tabindex', blocked ? '-1' : '0');
+        if (promoDrawerTab) {
+            promoDrawerTab.setAttribute('tabindex', blocked ? '-1' : '0');
+            if (blocked) promoDrawerTab.setAttribute('aria-expanded', 'false');
+        }
+
+        promoWrap.querySelectorAll('[data-app-name]').forEach((el) => {
+            el.setAttribute('tabindex', blocked ? '-1' : '0');
         });
+
+        this.#els.promoSheet?.querySelectorAll('[data-app-name]').forEach((el) => {
+            el.setAttribute('tabindex', blocked ? '-1' : '0');
+        });
+
+        if (blocked) this.#closePromoSheet();
     }
 
     #resetTimer() {

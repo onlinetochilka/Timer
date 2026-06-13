@@ -114,7 +114,16 @@
             align-items: center;
             min-height: 0;
             overflow: visible;
+            position: relative;
             transition: background 0.7s ease, box-shadow 0.7s ease, border-radius 0.5s ease;
+        }
+
+        .app-card.card > .card-chrome,
+        .app-card.card > .timer-stage,
+        .app-card.card > .card-chrome-bottom {
+            position: relative;
+            z-index: 1;
+            width: 100%;
         }
 
         .card-chrome {
@@ -810,211 +819,342 @@
             .btn { padding: 14px 20px; }
         }
 
-        /* ─── Hover Bar (кросс-промо) — только десктоп ─────────────────────── */
-        .hover-bar {
-            display: none;
+        /* ─── Glass Drawer (промо-пенал) ───────────────────────────────────── */
+        .promo-wrap {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
         }
 
+        .promo-drawer {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: -1;
+            pointer-events: auto;
+        }
+
+        .promo-drawer__tab {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 2;
+            width: 26px;
+            height: 88px;
+            padding: 10px 4px;
+            border: 1px solid rgba(255, 255, 255, 0.55);
+            border-left: none;
+            border-radius: 0 12px 12px 0;
+            background: rgba(255, 255, 255, 0.38);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 3px 0 14px rgba(184, 194, 209, 0.22);
+            color: var(--text-muted);
+            cursor: pointer;
+            pointer-events: auto;
+            transition: background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .promo-drawer__tab-label {
+            display: block;
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            font-size: 0.62rem;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            white-space: nowrap;
+            line-height: 1;
+        }
+
+        .promo-drawer__pen {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 210px;
+            max-height: min(320px, 52vh);
+            display: flex;
+            flex-direction: column;
+            padding: 14px 12px 12px;
+            background: rgba(255, 255, 255, 0.44);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.62);
+            border-left: none;
+            border-radius: 0 18px 18px 0;
+            box-shadow: 6px 0 28px rgba(184, 194, 209, 0.28);
+            transform: translate(0, -50%);
+            transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .promo-drawer__scroll,
+        .promo-sheet__scroll {
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            padding-right: 2px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(116, 125, 140, 0.35) transparent;
+        }
+
+        .promo-drawer__scroll::-webkit-scrollbar,
+        .promo-sheet__scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .promo-drawer__scroll::-webkit-scrollbar-thumb,
+        .promo-sheet__scroll::-webkit-scrollbar-thumb {
+            background: rgba(116, 125, 140, 0.35);
+            border-radius: 4px;
+        }
+
+        .promo-drawer__list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .promo-drawer__item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.32);
+            color: var(--text-main);
+            font-size: 0.84rem;
+            font-weight: 600;
+            text-align: left;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: box-shadow 0.25s ease, transform 0.25s ease, background 0.25s ease;
+        }
+
+        .promo-drawer__item:hover {
+            box-shadow: var(--shadow-sm);
+            transform: translateY(-1px);
+        }
+
+        .promo-drawer__item-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .promo-drawer__badge {
+            flex-shrink: 0;
+            font-size: 0.58rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            color: var(--brand-teal);
+            background: rgba(0, 101, 132, 0.1);
+            border: 1px solid rgba(0, 101, 132, 0.16);
+            padding: 2px 6px;
+            border-radius: 5px;
+        }
+
+        .promo-drawer__platform {
+            flex-shrink: 0;
+            width: 100%;
+            padding: 13px 14px;
+            border: 1px solid rgba(0, 101, 132, 0.28);
+            border-radius: 12px;
+            background: rgba(0, 101, 132, 0.18);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            color: var(--brand-teal);
+            font-size: 0.86rem;
+            font-weight: 700;
+            text-align: center;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: background 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+        }
+
+        .promo-drawer__platform:hover {
+            background: rgba(0, 101, 132, 0.28);
+            box-shadow: 0 4px 16px rgba(0, 101, 132, 0.18);
+            transform: translateY(-1px);
+        }
+
+        .promo-wrap.is-blocked {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .promo-wrap.is-blocked .promo-drawer__pen {
+            transform: translate(0, -50%);
+        }
+
+        /* Десктоп: hover выезжает вбок */
         @media (min-width: 1024px) {
-            .hover-bar {
-                display: block;
-                position: fixed;
-                left: 0;
-                top: 50%;
-                transform: translateY(-50%);
-                z-index: 250;
-                pointer-events: auto;
-                transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1),
-                            opacity 0.45s ease,
-                            visibility 0.45s ease;
-            }
+            .promo-sheet { display: none !important; }
 
-            .hover-bar__tab {
-                position: absolute;
-                left: 0;
-                top: 50%;
-                transform: translateY(-50%);
-                width: 36px;
-                height: 72px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background: rgba(255, 255, 255, 0.35);
-                backdrop-filter: blur(10px);
-                -webkit-backdrop-filter: blur(10px);
-                border: 1px solid rgba(255, 255, 255, 0.55);
-                border-left: none;
-                border-radius: 0 14px 14px 0;
-                box-shadow: 4px 0 16px rgba(184, 194, 209, 0.25);
-                color: var(--text-muted);
-                cursor: pointer;
-                z-index: 2;
-                transition: background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
-            }
-
-            .hover-bar__tab svg {
-                width: 20px;
-                height: 20px;
-                stroke: currentColor;
-                fill: none;
-                stroke-width: 1.8;
-                stroke-linecap: round;
-                stroke-linejoin: round;
-                pointer-events: none;
-            }
-
-            .hover-bar:hover .hover-bar__tab,
-            .hover-bar:focus-within .hover-bar__tab {
-                background: rgba(255, 255, 255, 0.5);
+            .promo-wrap:hover .promo-drawer__tab,
+            .promo-wrap:focus-within .promo-drawer__tab {
+                background: rgba(255, 255, 255, 0.52);
                 color: var(--brand-teal);
-                box-shadow: 6px 0 20px rgba(184, 194, 209, 0.35);
             }
 
-            .hover-bar__panel {
+            .promo-wrap:hover .promo-drawer__pen,
+            .promo-wrap:focus-within .promo-drawer__pen {
+                transform: translate(calc(-100% + 26px), -50%);
+            }
+        }
+
+        /* Мобилки: ярлычок снизу + bottom sheet */
+        @media (max-width: 1023px) {
+            .promo-drawer { display: none; }
+
+            .promo-drawer__tab {
+                left: 50%;
+                top: auto;
+                bottom: -14px;
+                transform: translateX(-50%);
+                width: 88px;
+                height: 26px;
+                padding: 4px 10px;
+                border-left: 1px solid rgba(255, 255, 255, 0.55);
+                border-top: none;
+                border-radius: 0 0 12px 12px;
+                box-shadow: 0 3px 14px rgba(184, 194, 209, 0.22);
+            }
+
+            .promo-drawer__tab-label {
+                writing-mode: horizontal-tb;
+                transform: none;
+                font-size: 0.58rem;
+                letter-spacing: 0.6px;
+            }
+
+            .promo-sheet {
+                position: fixed;
+                inset: 0;
+                z-index: 400;
+                pointer-events: none;
+                visibility: hidden;
+            }
+
+            .promo-sheet.is-open {
+                pointer-events: auto;
+                visibility: visible;
+            }
+
+            .promo-sheet__backdrop {
+                position: absolute;
+                inset: 0;
+                background: rgba(45, 52, 54, 0.35);
+                opacity: 0;
+                transition: opacity 0.35s ease;
+            }
+
+            .promo-sheet.is-open .promo-sheet__backdrop {
+                opacity: 1;
+            }
+
+            .promo-sheet__panel {
                 position: absolute;
                 left: 0;
-                top: 50%;
-                transform: translate(-100%, -50%);
-                width: 220px;
-                padding: 20px 18px 18px;
-                background: rgba(255, 255, 255, 0.42);
+                right: 0;
+                bottom: 0;
+                max-height: min(72vh, 520px);
+                display: flex;
+                flex-direction: column;
+                padding: 10px 18px max(18px, env(safe-area-inset-bottom, 0px));
+                background: rgba(255, 255, 255, 0.88);
                 backdrop-filter: blur(10px);
                 -webkit-backdrop-filter: blur(10px);
-                border: 1px solid rgba(255, 255, 255, 0.6);
-                border-left: none;
-                border-radius: 0 20px 20px 0;
-                box-shadow: 8px 0 32px rgba(184, 194, 209, 0.3);
-                opacity: 0;
-                visibility: hidden;
-                pointer-events: none;
-                transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1),
-                            opacity 0.4s ease,
-                            visibility 0.4s ease;
+                border: 1px solid rgba(255, 255, 255, 0.7);
+                border-bottom: none;
+                border-radius: 22px 22px 0 0;
+                box-shadow: 0 -8px 40px rgba(184, 194, 209, 0.35);
+                transform: translateY(100%);
+                transition: transform 0.42s cubic-bezier(0.4, 0, 0.2, 1);
             }
 
-            .hover-bar:hover .hover-bar__panel,
-            .hover-bar:focus-within .hover-bar__panel {
-                transform: translate(0, -50%);
-                opacity: 1;
-                visibility: visible;
-                pointer-events: auto;
+            .promo-sheet.is-open .promo-sheet__panel {
+                transform: translateY(0);
             }
 
-            .hover-bar__title {
+            .promo-sheet__handle {
+                width: 36px;
+                height: 4px;
+                margin: 0 auto 12px;
+                border-radius: 2px;
+                background: rgba(116, 125, 140, 0.35);
+            }
+
+            .promo-sheet__title {
                 font-size: 0.72rem;
                 font-weight: 700;
                 letter-spacing: 1.2px;
                 text-transform: uppercase;
                 color: var(--text-muted);
-                margin-bottom: 14px;
+                margin-bottom: 12px;
+                text-align: center;
             }
 
-            .hover-bar__cards {
-                display: flex;
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            .hover-bar__card {
-                position: relative;
-                padding: 14px 14px 12px;
-                border-radius: 14px;
-                background: rgba(255, 255, 255, 0.35);
-                border: 1px solid rgba(255, 255, 255, 0.5);
-                box-shadow: var(--shadow-sm);
-                cursor: default;
-                transition: box-shadow 0.3s ease, transform 0.3s ease;
-            }
-
-            .hover-bar__card:hover {
-                box-shadow: var(--shadow-md);
-                transform: translateY(-1px);
-            }
-
-            .hover-bar__card-name {
-                font-size: 0.88rem;
-                font-weight: 600;
-                color: var(--text-main);
-                line-height: 1.3;
-                padding-right: 48px;
-            }
-
-            .hover-bar__badge {
+            .promo-sheet__close {
                 position: absolute;
-                top: 10px;
-                right: 10px;
-                font-size: 0.62rem;
-                font-weight: 700;
-                letter-spacing: 0.6px;
-                text-transform: uppercase;
-                color: var(--brand-teal);
-                background: rgba(0, 101, 132, 0.1);
-                border: 1px solid rgba(0, 101, 132, 0.18);
-                padding: 3px 7px;
-                border-radius: 6px;
+                top: 12px;
+                right: 14px;
+                width: 32px;
+                height: 32px;
+                border: none;
+                border-radius: 50%;
+                background: rgba(224, 229, 236, 0.8);
+                color: var(--text-muted);
+                font-size: 1.25rem;
+                line-height: 1;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: background 0.2s ease, color 0.2s ease;
             }
 
-            /* Блокировка при активном таймере */
-            .hover-bar.is-blocked {
-                transform: translateY(-50%) translateX(-120%);
-                opacity: 0;
-                visibility: hidden;
-                pointer-events: none;
+            .promo-sheet__close:hover {
+                background: rgba(224, 229, 236, 1);
+                color: var(--text-main);
             }
 
-            .hover-bar.is-blocked .hover-bar__panel {
-                transform: translate(-100%, -50%);
-                opacity: 0;
-                visibility: hidden;
-                pointer-events: none;
+            .promo-sheet__platform {
+                margin-top: 4px;
             }
+        }
 
-            body.rest-mode .hover-bar__tab {
-                background: rgba(255, 255, 255, 0.08);
-                border-color: rgba(255, 255, 255, 0.12);
-                box-shadow: 4px 0 16px rgba(0, 0, 0, 0.25);
-            }
+        body.rest-mode .promo-drawer__tab {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.14);
+        }
 
-            body.rest-mode .hover-bar__panel {
-                background: rgba(30, 38, 52, 0.55);
-                border-color: rgba(255, 255, 255, 0.1);
-                box-shadow: 8px 0 32px rgba(0, 0, 0, 0.35);
-            }
+        body.rest-mode .promo-drawer__pen {
+            background: rgba(30, 38, 52, 0.62);
+            border-color: rgba(255, 255, 255, 0.12);
+        }
 
-            body.rest-mode .hover-bar__card {
-                background: rgba(255, 255, 255, 0.06);
-                border-color: rgba(255, 255, 255, 0.1);
-            }
+        body.rest-mode .promo-drawer__item {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        body.rest-mode .promo-sheet__panel {
+            background: rgba(28, 36, 51, 0.92);
+            border-color: rgba(255, 255, 255, 0.1);
         }
     </style>
 </head>
 
 <body class="tochilka-theme">
-
-    <!-- ── Hover Bar: кросс-промо (только десктоп) ─────────────────────────── -->
-    <aside class="hover-bar" id="hoverBar" aria-label="Другие приложения Точилки" aria-hidden="false">
-        <div class="hover-bar__tab" aria-hidden="true">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-                <rect x="3" y="3" width="7" height="7" rx="1.5"/>
-                <rect x="14" y="3" width="7" height="7" rx="1.5"/>
-                <rect x="3" y="14" width="7" height="7" rx="1.5"/>
-                <rect x="14" y="14" width="7" height="7" rx="1.5"/>
-            </svg>
-        </div>
-        <div class="hover-bar__panel" id="hoverBarPanel">
-            <div class="hover-bar__title">Ещё от Точилки</div>
-            <div class="hover-bar__cards">
-                <div class="hover-bar__card" tabindex="0" role="article" aria-label="Тренажёр дробей — скоро">
-                    <span class="hover-bar__badge">Скоро</span>
-                    <div class="hover-bar__card-name">Тренажёр дробей</div>
-                </div>
-                <div class="hover-bar__card" tabindex="0" role="article" aria-label="Квизы — скоро">
-                    <span class="hover-bar__badge">Скоро</span>
-                    <div class="hover-bar__card-name">Квизы</div>
-                </div>
-            </div>
-        </div>
-    </aside>
 
     <div class="app-shell">
 
@@ -1027,6 +1167,50 @@
 
         <!-- ── Карточка ─────────────────────────────────────────────────────── -->
         <div class="app-card card" role="main">
+
+            <!-- ── Glass Drawer: промо-пенал из-под карточки ───────────────── -->
+            <div class="promo-wrap" id="promoWrap">
+                <div class="promo-drawer" id="promoDrawer" aria-label="Другие приложения Точилки">
+                    <div class="promo-drawer__pen" id="promoDrawerPen" aria-hidden="true">
+                        <div class="promo-drawer__scroll">
+                            <div class="promo-drawer__list" id="promoDrawerList" role="list"></div>
+                        </div>
+                        <button class="promo-drawer__platform" type="button" data-app-name="main_platform">
+                            На главную платформу
+                        </button>
+                    </div>
+                </div>
+                <button
+                    class="promo-drawer__tab"
+                    id="promoDrawerTab"
+                    type="button"
+                    aria-expanded="false"
+                    aria-controls="promoDrawerPen promoSheetPanel"
+                >
+                    <span class="promo-drawer__tab-label">[ПРОМО_ТЕКСТ]</span>
+                </button>
+            </div>
+
+            <div class="promo-sheet" id="promoSheet" aria-hidden="true">
+                <div class="promo-sheet__backdrop" id="promoSheetBackdrop"></div>
+                <div
+                    class="promo-sheet__panel"
+                    id="promoSheetPanel"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="promoSheetTitle"
+                >
+                    <button class="promo-sheet__close" id="promoSheetClose" type="button" aria-label="Закрыть">&times;</button>
+                    <div class="promo-sheet__handle" aria-hidden="true"></div>
+                    <h2 class="promo-sheet__title" id="promoSheetTitle">Ещё от Точилки</h2>
+                    <div class="promo-sheet__scroll">
+                        <div class="promo-drawer__list" id="promoSheetList" role="list"></div>
+                    </div>
+                    <button class="promo-drawer__platform promo-sheet__platform" type="button" data-app-name="main_platform">
+                        На главную платформу
+                    </button>
+                </div>
+            </div>
 
             <div class="card-chrome">
 
