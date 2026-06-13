@@ -34,6 +34,54 @@ const COLOR_WORK = 'var(--brand-teal)';
 const COLOR_REST = 'var(--color-rest)';
 const FADE_MS = 400;
 
+const YM_COUNTER_ID = 109823647;
+const UTM_STORAGE_KEY = 'tochilka_utms';
+const UTM_PARAM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'];
+
+/**
+ * @param {string} goal
+ * @param {Record<string, string> | undefined} params
+ */
+function reachGoal(goal, params) {
+    if (typeof ym === 'function') {
+        if (params) {
+            ym(YM_COUNTER_ID, 'reachGoal', goal, params);
+        } else {
+            ym(YM_COUNTER_ID, 'reachGoal', goal);
+        }
+    }
+}
+
+/** Сохраняет UTM-метки из URL в sessionStorage для последующих перезагрузок. */
+function captureUtmParams() {
+    const search = new URLSearchParams(window.location.search);
+    const utms = {};
+
+    for (const key of UTM_PARAM_KEYS) {
+        const value = search.get(key);
+        if (value) utms[key] = value;
+    }
+
+    if (Object.keys(utms).length === 0) return;
+
+    try {
+        sessionStorage.setItem(UTM_STORAGE_KEY, JSON.stringify(utms));
+    } catch { /* private mode / quota */ }
+}
+
+/**
+ * @param {Promise<void>} playPromise
+ * @param {(() => void) | undefined} onSuccess
+ */
+function playAmbientAudio(playPromise, onSuccess) {
+    playPromise
+        .then(() => onSuccess?.())
+        .catch((err) => {
+            reachGoal('atmosphere_error');
+            console.warn('[Ambient] Ошибка воспроизведения:', err?.name || err);
+        });
+}
+
 class PomodoroApp {
     #worker = null;
 
@@ -143,6 +191,8 @@ class PomodoroApp {
             atmosphereToggle: $('atmosphereToggle'),
             atmospherePanel:  $('atmospherePanel'),
             atmosphereGrid:   $('atmosphereGrid'),
+            hoverBar:         $('hoverBar'),
+            hoverBarPanel:    $('hoverBarPanel'),
         };
 
         const r = this.#els.progressCircle.r.baseVal.value;
@@ -214,7 +264,11 @@ class PomodoroApp {
         this.#els.modeButtons.forEach((btn) => {
             btn.addEventListener('click', (e) => {
                 if (e.target.closest('.mode-info')) return;
-                this.#state.currentMode = btn.dataset.mode;
+                const nextMode = btn.dataset.mode;
+                if (nextMode !== this.#state.currentMode) {
+                    reachGoal('mode_changed', { mode_name: nextMode });
+                }
+                this.#state.currentMode = nextMode;
                 this.#els.modeButtons.forEach((b) => {
                     b.classList.remove('active');
                     b.setAttribute('aria-pressed', 'false');
@@ -265,6 +319,7 @@ class PomodoroApp {
         });
 
         this.#els.resetBtn.addEventListener('click', () => {
+            reachGoal('timer_reset');
             this.#els.resetBtn.classList.add('active-press');
             setTimeout(() => this.#els.resetBtn.classList.remove('active-press'), 200);
             this.#resetTimer();
@@ -379,7 +434,10 @@ class PomodoroApp {
 
         this.#ambientAudio.play().then(() => {
             this.#fadeVolume(this.#ambientAudio, 0, this.#ambientPreFinishVolume, FADE_MS);
-        }).catch(() => {});
+        }).catch((err) => {
+            reachGoal('atmosphere_error');
+            console.warn('[Ambient] Ошибка воспроизведения после завершения:', err?.name || err);
+        });
     }
 
     #playFinishSound() {
@@ -458,10 +516,9 @@ class PomodoroApp {
             this.#ambientAudio.volume = 0;
             this.#currentSoundId = id;
 
-            this.#ambientAudio.play().then(() => {
+            playAmbientAudio(this.#ambientAudio.play(), () => {
+                reachGoal('atmosphere_play', { track_name: id });
                 this.#fadeVolume(this.#ambientAudio, 0, targetVol, FADE_MS);
-            }).catch(() => {
-                console.warn('[Ambient] Не удалось загрузить:', AMBIENT_SOUNDS[id].url);
             });
 
             this.#syncAmbientUI();
@@ -499,7 +556,7 @@ class PomodoroApp {
     #resumeAmbient() {
         if (this.#ambientDuckedForFinish) return;
         if (this.#ambientAudio && this.#currentSoundId && this.#atmosphereEnabled) {
-            this.#ambientAudio.play().catch(() => {});
+            playAmbientAudio(this.#ambientAudio.play());
         }
     }
 
@@ -606,6 +663,25 @@ class PomodoroApp {
             startBtn.setAttribute('aria-label', 'Запустить таймер');
             brandLogo.classList.remove('running');
         }
+
+        this.#syncHoverBar();
+    }
+
+    #syncHoverBar() {
+        const { hoverBar, hoverBarPanel } = this.#els;
+        if (!hoverBar) return;
+
+        const blocked = this.#state.isRunning;
+        hoverBar.classList.toggle('is-blocked', blocked);
+        hoverBar.setAttribute('aria-hidden', blocked ? 'true' : 'false');
+
+        if (hoverBarPanel) {
+            hoverBarPanel.setAttribute('aria-hidden', blocked ? 'true' : 'false');
+        }
+
+        hoverBar.querySelectorAll('.hover-bar__card[tabindex]').forEach((card) => {
+            card.setAttribute('tabindex', blocked ? '-1' : '0');
+        });
     }
 
     #resetTimer() {
@@ -648,13 +724,20 @@ class PomodoroApp {
     }
 
     #toggleTimer() {
-        this.#state.isRunning ? this.#pauseTimer() : this.#startTimer();
+        if (this.#state.isRunning) {
+            reachGoal('timer_pause');
+            this.#pauseTimer();
+        } else {
+            reachGoal('timer_start');
+            this.#startTimer();
+        }
     }
 
     #handleComplete() {
         const s   = this.#state;
         const cfg = this.#config[s.currentMode];
 
+        reachGoal('timer_finish');
         this.#playFinishSound();
 
         if (cfg.hasRest && !s.isResting) {
@@ -688,4 +771,5 @@ class PomodoroApp {
     }
 }
 
+captureUtmParams();
 new PomodoroApp();
