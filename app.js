@@ -260,7 +260,7 @@ class PomodoroApp {
     #buildAtmosphereGrid() {
         const { atmosphereGrid } = this.#els;
         atmosphereGrid.innerHTML = Object.entries(AMBIENT_SOUNDS).map(([id, { label }]) =>
-            `<button class="sound-btn" data-sound="${id}" aria-label="${label}" title="${label}" type="button">
+            `<button class="sound-btn" data-sound="${id}" aria-label="${label}" type="button">
                 ${SOUND_ICONS[id]}
                 <span class="sound-tooltip">${label}</span>
             </button>`
