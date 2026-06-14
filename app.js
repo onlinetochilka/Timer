@@ -109,7 +109,7 @@ class PomodoroApp {
     #atmosphereEnabled = false;
     #fadeTimer = null;
 
-    #finishAudio = null;
+    #finishAudio = new Audio('./sounds/finish.mp3');
     #ambientDuckedForFinish = false;
     #ambientPreFinishVolume = 0.35;
 
@@ -190,6 +190,8 @@ class PomodoroApp {
         this.#buildAtmosphereGrid();
         this.#buildPromoCards();
         this.#initWorker();
+        // Предзагрузка звука завершения: объект создаётся один раз
+        this.#finishAudio.preload = 'auto';
         this.#bindEvents();
         this.#bindExtrasEvents();
         this.#bindPromoEvents();
@@ -317,9 +319,13 @@ class PomodoroApp {
     }
 
     #bindEvents() {
-        this.#els.modeButtons.forEach((btn) => {
-            btn.addEventListener('click', (e) => {
+        // Делегирование: единый обработчик на родительском .modes-grid
+        const modesGrid = document.querySelector('.modes-grid');
+        if (modesGrid) {
+            modesGrid.addEventListener('click', (e) => {
                 if (e.target.closest('.mode-info')) return;
+                const btn = e.target.closest('.mode-btn');
+                if (!btn) return;
                 const nextMode = btn.dataset.mode;
                 if (nextMode !== this.#state.currentMode) {
                     reachGoal('mode_changed', { mode_name: nextMode });
@@ -335,7 +341,7 @@ class PomodoroApp {
                 this.#renderSubmenu();
                 this.#resetTimer();
             });
-        });
+        }
 
         document.querySelectorAll('.mode-info').forEach((info) => {
             info.addEventListener('click', (e) => {
@@ -521,10 +527,10 @@ class PomodoroApp {
         this.#stopFinishSound();
         this.#duckAmbientForFinish();
 
-        this.#finishAudio = new Audio('./sounds/finish.mp3');
+        // Используем кэшированный объект: сбрасываем время и воспроизводим
+        this.#finishAudio.currentTime = 0;
         this.#finishAudio.volume = 1;
         this.#finishAudio.addEventListener('ended', () => {
-            this.#finishAudio = null;
             this.#restoreAmbientAfterFinish();
         }, { once: true });
         this.#finishAudio.play().catch(() => {
@@ -534,11 +540,9 @@ class PomodoroApp {
     }
 
     #stopFinishSound() {
-        if (this.#finishAudio) {
-            this.#finishAudio.pause();
-            this.#finishAudio.currentTime = 0;
-            this.#finishAudio = null;
-        }
+        // Кэшированный объект: пауза + сброс позиции (не уничтожаем)
+        this.#finishAudio.pause();
+        this.#finishAudio.currentTime = 0;
         this.#ambientDuckedForFinish = false;
     }
 
@@ -721,8 +725,12 @@ class PomodoroApp {
         const { timeDisplay, startBtn, brandLogo, progressCircle } = this.#els;
         const { timeLeft, totalSeconds, isRunning } = this.#state;
 
-        timeDisplay.textContent = this.#formatTime(timeLeft);
-        timeDisplay.setAttribute('aria-label', `Осталось: ${timeDisplay.textContent}`);
+        // Обновляем DOM только при изменении значения — избегаем лишних reflow
+        const newTime = this.#formatTime(timeLeft);
+        if (timeDisplay.textContent !== newTime) {
+            timeDisplay.textContent = newTime;
+            timeDisplay.setAttribute('aria-label', `Осталось: ${newTime}`);
+        }
 
         progressCircle.style.strokeDashoffset = totalSeconds === 0
             ? '0'
