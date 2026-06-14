@@ -33,12 +33,15 @@
 
     <div class="app-shell">
 
-        <!-- ── Zen-свитч (фиксированный, всегда поверх) ───────────────────── -->
-        <label class="zen-switch" id="zenSwitch" title="Режим Фокуса: парящий таймер">
-            <input type="checkbox" id="zenToggle" aria-label="Включить режим Фокуса">
-            <span class="zen-track"><span class="zen-thumb"></span></span>
-            <span class="zen-label">Фокус</span>
-        </label>
+        <!-- ── Кнопка полноэкранного режима (фиксированная, всегда поверх) ── -->
+        <button class="fullscreen-btn" id="fullscreenBtn" title="Полноэкранный режим" aria-label="Переключить полноэкранный режим">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="15 3 21 3 21 9"/>
+                <polyline points="9 21 3 21 3 15"/>
+                <line x1="21" y1="3" x2="14" y2="10"/>
+                <line x1="3" y1="21" x2="10" y2="14"/>
+            </svg>
+        </button>
 
         <!-- ── Стек: панель (низ) + таймер (верх) ───────────────────────────── -->
         <div class="timer-stack">
@@ -51,12 +54,18 @@
                 aria-hidden="false"
             >
                 <div class="glass-drawer__panel" id="glassDrawerPanel">
+                    <div class="scroll-hint scroll-hint--top" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="18 15 12 9 6 15"/>
+                        </svg>
+                    </div>
                     <div class="glass-drawer__scroll" id="glassDrawerScroll">
-                        <button
-                            class="glass-drawer__all-btn"
-                            type="button"
-                            data-app-name="all_services"
-                        >Все приложения Точилки</button>
+                        <!-- populated by JS -->
+                    </div>
+                    <div class="scroll-hint scroll-hint--bottom" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
                     </div>
                 </div>
                 <span class="glass-drawer__tab" id="glassDrawerTab" aria-hidden="true">Сменить фокус</span>

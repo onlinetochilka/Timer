@@ -193,7 +193,6 @@ class PomodoroApp {
         this.#bindEvents();
         this.#bindExtrasEvents();
         this.#bindPromoEvents();
-        this.#bindPromoScroll();
         this.#renderSubmenu();
         this.#updateRestModeClass();
         this.#resetTimer();
@@ -210,12 +209,13 @@ class PomodoroApp {
             dotsContainer:    $('dotsContainer'),
             brandLogo:        $('brandLogo'),
             progressCircle:   $('progressCircle'),
-            zenToggle:        $('zenToggle'),
+            fullscreenBtn:    $('fullscreenBtn'),
             atmosphereToggle: $('atmosphereToggle'),
             atmospherePanel:  $('atmospherePanel'),
             atmosphereGrid:   $('atmosphereGrid'),
             glassDrawer:      $('glassDrawer'),
             glassDrawerScroll: $('glassDrawerScroll'),
+            glassDrawerTab:   $('glassDrawerTab'),
         };
 
         const r = this.#els.progressCircle.r.baseVal.value;
@@ -228,10 +228,17 @@ class PomodoroApp {
         const { glassDrawerScroll } = this.#els;
         if (!glassDrawerScroll) return;
 
-        const cardsHtml = PROMO_APPS.map(({ app_name, label }) =>
-            `<button class="glass-drawer__card" type="button" data-app-name="${app_name}">${label}</button>`
-        ).join('');
-        glassDrawerScroll.insertAdjacentHTML('beforeend', cardsHtml);
+        const cardHtml = ({ app_name, label }) =>
+            `<button class="glass-drawer__card" type="button" data-app-name="${app_name}">${label}</button>`;
+
+        const allBtnHtml = `<button class="glass-drawer__all-btn" type="button" data-app-name="all_services">Все приложения Точилки</button>`;
+
+        // Вставляем 6 карточек, затем главную кнопку (7-й элемент), затем оставшиеся 8
+        const SPLIT = 6;
+        glassDrawerScroll.innerHTML =
+            PROMO_APPS.slice(0, SPLIT).map(cardHtml).join('') +
+            allBtnHtml +
+            PROMO_APPS.slice(SPLIT).map(cardHtml).join('');
     }
 
     #bindPromoEvents() {
@@ -243,21 +250,6 @@ class PomodoroApp {
             if (!card || this.#state.isRunning) return;
             if (window.innerWidth < PROMO_DESKTOP_BREAKPOINT) return;
             this.#handlePromoClick(card.dataset.appName);
-        });
-    }
-
-    #bindPromoScroll() {
-        const scroll = this.#els.glassDrawerScroll;
-        if (!scroll) return;
-
-        scroll.addEventListener('mousemove', (e) => {
-            const maxScroll = scroll.scrollHeight - scroll.clientHeight;
-            if (maxScroll <= 0) return;
-
-            const rect = scroll.getBoundingClientRect();
-            const percentage = (e.clientY - rect.top) / rect.height;
-
-            scroll.scrollTop = maxScroll * percentage;
         });
     }
 
@@ -391,8 +383,23 @@ class PomodoroApp {
     }
 
     #bindExtrasEvents() {
-        this.#els.zenToggle.addEventListener('change', () => {
-            this.#toggleZen(this.#els.zenToggle.checked);
+        this.#els.fullscreenBtn.addEventListener('click', () => {
+            this.#toggleZen(!this.#isZenMode);
+        });
+
+        this.#els.glassDrawerTab.addEventListener('click', () => {
+            const { glassDrawer, glassDrawerScroll } = this.#els;
+            if (!glassDrawer || glassDrawer.classList.contains('is-blocked')) return;
+
+            const isOpen = glassDrawer.classList.toggle('is-open');
+            if (isOpen) {
+                const allBtn = glassDrawerScroll?.querySelector('.glass-drawer__all-btn');
+                if (allBtn) {
+                    requestAnimationFrame(() => {
+                        allBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    });
+                }
+            }
         });
 
         this.#els.atmosphereToggle.addEventListener('change', () => {
@@ -662,12 +669,13 @@ class PomodoroApp {
     #applyZenOn() {
         this.#isZenMode = true;
         document.body.classList.add('zen-mode');
+        this.#els.fullscreenBtn.classList.add('active');
     }
 
     #applyZenOff() {
         this.#isZenMode = false;
         document.body.classList.remove('zen-mode');
-        this.#els.zenToggle.checked = false;
+        this.#els.fullscreenBtn.classList.remove('active');
     }
 
     #renderSubmenu() {
@@ -741,6 +749,7 @@ class PomodoroApp {
 
         const blocked = this.#state.isRunning;
         glassDrawer.classList.toggle('is-blocked', blocked);
+        if (blocked) glassDrawer.classList.remove('is-open');
         glassDrawer.setAttribute('aria-hidden', blocked ? 'true' : 'false');
 
         glassDrawer.querySelectorAll('[data-app-name]').forEach((el) => {
