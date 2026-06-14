@@ -1,5 +1,5 @@
 /**
- * app.js — Фокус-таймер Точилки
+ * app.js — Умный таймер Точилки
  * Архитектура: класс PomodoroApp (ES2022 private fields)
  * Таймер работает в Web Worker (worker.js) — не засыпает в неактивной вкладке
  */
@@ -8,7 +8,7 @@ const AMBIENT_SOUNDS = {
     cafe:   { label: 'Кафе',         url: './sounds/cafe.mp3'   },
     rain:   { label: 'Дождь',        url: './sounds/rain.mp3'   },
     river:  { label: 'Река',         url: './sounds/river.mp3'  },
-    ocean:  { label: 'Океан',        url: './sounds/ocean.mp3'  },
+    fire:   { label: 'Костёр',        url: './sounds/fire.mp3'   },
     jungle: { label: 'Джунгли',      url: './sounds/jungle.mp3' },
     train:  { label: 'Поезд',        url: './sounds/train.mp3'  },
     storm:  { label: 'Гроза',        url: './sounds/storm.mp3'  },
@@ -27,7 +27,7 @@ const SOUND_ICONS = {
     purr: `<svg viewBox="0 0 24 24"><path d="M12 20c-4.5 0-8-3-8-7.5C4 8.5 7.5 5 12 5s8 3.5 8 7.5c0 4.5-3.5 7.5-8 7.5z"/><path d="M8 5.5 6.5 3"/><path d="M16 5.5 17.5 3"/><path d="M9 13.5q1.5 1 3 0"/><path d="M13.5 13.5q1.5 1 3 0"/><path d="M10 16.5q2 1.5 4 0"/></svg>`,
     birds: `<svg viewBox="0 0 24 24"><path d="M16 7h.01"/><path d="M3.4 18H12a8 8 0 0 0 8-8V7a4 4 0 0 0-7.28-2.32L2 20"/><path d="m2 17 10-10"/></svg>`,
     night: `<svg viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`,
-    ocean: `<svg viewBox="0 0 24 24"><path d="M2 8c2-1.5 4-1.5 6 0s4 1.5 6 0 4-1.5 6 0"/><path d="M2 12c2-1.5 4-1.5 6 0s4 1.5 6 0 4-1.5 6 0"/><path d="M2 16c2-1.5 4-1.5 6 0s4 1.5 6 0 4-1.5 6 0"/></svg>`,
+    fire:  `<svg viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>`,
 };
 
 const PROMO_APPS = [
